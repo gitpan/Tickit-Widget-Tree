@@ -5,10 +5,10 @@ use warnings;
 use parent qw(Tickit::Widget);
 use List::Util qw(sum);
 use Scalar::Util qw(blessed);
-use Tickit::Utils qw(substrwidth);
+use Tickit::Utils qw(substrwidth textwidth);
 use utf8;
 
-our $VERSION = '0.001';
+our $VERSION = '0.002';
 
 =head1 NAME
 
@@ -16,7 +16,7 @@ Tickit::Widget::Tree - support for an expandable tree widget
 
 =head1 VERSION
 
-version 0.001
+version 0.002
 
 =head1 SYNOPSIS
 
@@ -35,6 +35,10 @@ version 0.001
 =head1 DESCRIPTION
 
 Simple tree widget. See examples in main source for more info.
+
+=cut
+
+use constant CLEAR_BEFORE_RENDER => 0;
 
 =head1 METHODS
 
@@ -65,11 +69,9 @@ sub new {
 	my %args = @_;
 	my $root = delete $args{root};
 	my $parent = delete $args{parent};
-	$root ||= $parent->root if $parent;
 	my $self = $class->SUPER::new(%args);
 	$self->{children} ||= [];
 
-	$args{is_open} ||= 0;
 	$args{last} ||= 1;
 
 	$self->{$_} = delete $args{$_} for grep exists $args{$_}, qw(label is_open last prev next line_style);
@@ -83,9 +85,88 @@ sub new {
 			my $prefix_len = length($self->prefix_text);
 			# TODO - remember what was going to happen here
 		}
-		$self->reapply_windows;
+		$self->resized;
 	}
 	return $self;
+}
+
+=head2 prev
+
+The 'previous element' is determined as follows:
+
+=over 4
+
+=item * If we have a previous sibling:
+
+=over 4
+
+=item * If the previous sibling is open and has children, returns the last of those
+
+=item * If the previous sibling is closed or empty, returns it (the previous sibling)
+
+=back
+
+=item * If we have a parent and no previous sibling(s):
+
+=over 4
+
+=item * Return the parent
+
+=back
+
+=item * Return ourselves
+
+=back
+
+=cut
+
+sub prev {
+	my $self = shift;
+	if(my $prev = $self->prev_sibling) {
+		return $prev if $prev->is_closed;
+		my $c = $prev;
+		$c = $c->last_child while $c->has_children;
+		return $c;
+	}
+	return $self->tree_parent if $self->tree_parent;
+	return $self;
+}
+
+sub prev_sibling { shift->{prev_sibling} }
+sub next_sibling { shift->{next_sibling} }
+
+=head2 next
+
+The 'next element' is determined as follows:
+
+=over 4
+
+=item * If we're open and have children, next is the first child element.
+
+=item * If we're closed or empty, next is the next sibling at our current level.
+
+=item * If there's no next sibling, call the parent's L</next> method.
+
+=item * If there's no parent, return $self.
+
+=back
+
+=cut
+
+sub next {
+	my $self = shift;
+	return $self->first_child if $self->is_open && $self->has_children;
+	return $self->next_ignore_children(@_);
+}
+
+sub next_ignore_children {
+	my $self = shift;
+	my $ns = $self->next_sibling;
+	return $ns if $ns;
+	my $parent = $self->tree_parent or return $self;
+	my $suggested = $parent->next_ignore_children(@_);
+	return $self if $suggested == $self->tree_parent;
+	return $suggested;
 }
 
 =head2 lines
@@ -99,7 +180,7 @@ sub lines {
 	my $self = shift;
 	my $lines = 1;
 	return $lines unless $self->is_open;
-	$lines += sum 0, map 0+$_->lines, $self->children;
+	$lines += sum 0, map +$_->lines, $self->children;
 	return $lines;
 }
 
@@ -115,9 +196,27 @@ sub cols { my $self = shift; 1; }
 
 Returns true if this node is open, false if not.
 
+If open state is undefined, then we inherit from the parent if we have one,
+or return 0 as a fallback.
+
 =cut
 
-sub is_open { shift->{is_open} }
+sub is_open {
+	my $self = shift;
+	return $self->{is_open} if defined $self->{is_open};
+	return $self->tree_parent->is_open if $self->tree_parent;
+	return 1;
+}
+
+sub is_closed { !(shift->is_open) }
+
+sub window_lost {
+	my $self = shift;
+
+	$_->set_window(undef) for $self->children;
+	$self->parent->resized if $self->parent;
+	return $self;
+}
 
 =head2 window_gained
 
@@ -127,31 +226,26 @@ sub window_gained {
 	my $self = shift;
 	# Let parent set up focus
 	$self->SUPER::window_gained(@_);
-
-	my $win = $self->window;
-	$self->rebuild_all;
-#	return unless $self->is_open;
-	return $self->reapply_windows;
+	$self->reapply_windows;
 }
-
-=head2 reapply_windows
-
-=cut
 
 sub reapply_windows {
 	my $self = shift;
-	my $win = $self->window or return;
+
 	unless($self->is_open) {
 		$_->set_window(undef) for $self->children;
-		return;
+		return $self->resized;
 	}
+
+	my $win = $self->window or return;
+
 	my $prefix_len = length $self->prefix_text;
 	my $y = 1;
 	my @tasks;
 	CHILD:
 	for my $child ($self->children) {
 		my $height = $child->lines;
-#		last CHILD unless ($y + $height) < ($self->window ? $self->window->lines : $self->lines);
+#		last CHILD unless ($y + $height) < $self->window->lines;
 
 		push @tasks, [ $child, ($child->window ? 'change' : 'create'), 
 			$y,
@@ -161,16 +255,17 @@ sub reapply_windows {
 		];
 		$y += $height;
 	}
-	$win->resize( $y, $win->cols);
+#	$win->resize($y, $win->cols);
 	foreach (@tasks) {
 		my ($child, $type, @args) = @$_;
-		if($type eq 'create') {
+#		if($type eq 'create') {
 			my $sub = $win->make_sub(@args);
 			$child->set_window($sub);
-		} else {
-			$child->window->change_geometry(@args);
-		}
+#		} else {
+#			$child->window->change_geometry(@args);
+#		}
 	}
+	return $self->resized;
 }
 
 =head2 C<insert_after>
@@ -184,6 +279,8 @@ Takes over $self->next, including backlink from $self->next->prev.
 sub insert_after {
 	my $self = shift;
 	my $v = shift;
+	$self->{next_sibling} = $v;
+	$v->{prev_sibling} = $self;
 
 # Take a copy of the next in the chain
 	my $next = $self->{next};
@@ -196,6 +293,7 @@ sub insert_after {
 	Scalar::Util::weaken($v->{next} = $next);
 # Update backlink from next in chain back to the new value
 	Scalar::Util::weaken($next->{prev} = $v);
+	return $self;
 }
 
 =head2 add
@@ -208,6 +306,7 @@ sub add {
 	die "bad child" unless $child->isa(__PACKAGE__);
 
 	my $prev = $self->{children}[-1];
+	$prev->insert_after($child) if $prev;
 
 # Add to queue
 	push @{$self->{children}}, $child;
@@ -221,43 +320,14 @@ sub add {
 	$self;
 }
 
-=head2 rebuild
-
-=cut
-
-sub rebuild {
-	my $self = shift;
-	my $node = shift or die 'nodes';
-	$self->{prev} = $node;
-	$node->{next} = $self;
-	return $self unless $self->is_open && $self->children;
-	$node = $self;
-	$node = $_->rebuild($node) for $self->children;
-	return $node;
-}
-
-=head2 rebuild_all
-
-=cut
-
-sub rebuild_all {
-	my $self = shift;
-	my $root = $self->root;
-	$root->{prev} = $root;
-	($root->{next}) = $root->children;
-	my $node = $root;
-	$node = $_->rebuild($node) for $root->children;
-	$node->{next} = $root;
-	$root->{prev} = $node;
-	$root->highlight unless $root->highlighted;
-	$self->resized;
-}
-
 =head2 children
 
 =cut
 
 sub children { @{ shift->{children} || [] } }
+sub has_children { @{ shift->{children} || [] } ? 1 : 0 }
+sub first_child { shift->{children}[0] }
+sub last_child { shift->{children}[-1] }
 
 =head2 is_highlighted
 
@@ -277,7 +347,7 @@ sub prefix_text {
 	} elsif($style eq 'compact_ascii') {
 		return '|';
 	} elsif($style eq 'single') {
-		return ' │';
+		return '│ ';
 	} elsif($style eq 'double') {
 		return ' ║';
 	} elsif($style eq 'thick') {
@@ -289,67 +359,83 @@ sub prefix_text {
 
 =head2 render
 
+Tickit::Window
 =cut
 
 sub render {
 	my $self = shift;
 	return unless my $win = $self->window;
+	my %args = @_;
+	my $rect = $args{rect} || $win->rect;
 
-	$win->goto(0,0);
-	my $txt = '';
-	my $style = $self->line_style or die "No line style for $self";
-	if($style eq 'ascii') {
-		$txt = '[' . ($self->is_open ? '-' : '+') . ']';
-	} elsif($style eq 'compact_ascii') {
-		$txt = ($self->is_open ? '-' : '+');
-	} elsif($style eq 'single') {
-		$txt = $self->{last} ? '└' : '├'; # : '└');
-		if($self->children && $self->is_open) {
-			$txt .= '─┬ ';
-		} elsif($self->children) {
-			$txt .= '[' . ($self->is_open ? '-' : '+') . ']';
+	my $y = $rect->top;
+	if($y < 1) {
+		my $txt = '';
+		my $style = $self->line_style or die "No line style for $self";
+		if($style eq 'ascii') {
+			$txt = '[' . ($self->is_open ? '-' : '+') . ']';
+		} elsif($style eq 'compact_ascii') {
+			$txt = ($self->is_open ? '-' : '+');
+		} elsif($style eq 'single') {
+			$txt = $self->{last} ? '└' : '├'; # : '└');
+			if($self->children && $self->is_open) {
+				$txt .= '─┬ ';
+			} elsif($self->children) {
+				$txt .= '[' . ($self->is_open ? '-' : '+') . ']';
+			} else {
+				$txt .= '─  ';
+			}
+		} elsif($style eq 'double') {
+			$txt = $self->{last} ? '╚' : '╠';
+			if($self->children && $self->is_open) {
+				$txt .= '═╦ ';
+			} elsif($self->children) {
+				$txt .= '[' . ($self->is_open ? '-' : '+') . ']';
+			} else {
+				$txt .= '═  ';
+			}
+		} elsif($style eq 'thick') {
+			$txt = $self->{last} ? '┗' : '┣';
+			if($self->children && $self->is_open) {
+				$txt .= '━┳ ';
+			} elsif($self->children) {
+				$txt .= '[' . ($self->is_open ? '-' : '+') . ']';
+			} else {
+				$txt .= '   ';
+			}
 		} else {
-			$txt .= '   ';
+			die 'Invalid style for tree element';
 		}
-	} elsif($style eq 'double') {
-		$txt = $self->{last} ? '╚' : '╠';
-		if($self->children && $self->is_open) {
-			$txt .= '═╦ ';
-		} elsif($self->children) {
-			$txt .= '[' . ($self->is_open ? '-' : '+') . ']';
-		} else {
-			$txt .= '   ';
+		if($rect->left <= textwidth $txt) {
+			$win->goto(0,0);
+			$win->print($txt);
 		}
-	} elsif($style eq 'thick') {
-		$txt = $self->{last} ? '┗' : '┣';
-		if($self->children && $self->is_open) {
-			$txt .= '━┳ ';
-		} elsif($self->children) {
-			$txt .= '[' . ($self->is_open ? '-' : '+') . ']';
-		} else {
-			$txt .= '   ';
+		my $lbl = $self->{label} // 'undef';
+		$lbl = substrwidth $lbl, 0, $win->cols;
+		if($rect->left <= textwidth "$txt$lbl") {
+			if($self->is_highlighted) {
+				$win->print($lbl, bg => 4);
+			} else {
+				$win->print($lbl);
+			}
+			$win->erasech($rect->cols - textwidth("$txt$lbl"));
 		}
-	} else {
-		$txt = 'ERR';
+		++$y;
 	}
-	$win->print($txt);
 
-	my $lbl = $self->{label} // 'undef';
-	$lbl = substrwidth $lbl, 0, $win->cols;
-	if($self->is_highlighted) {
-		$win->print($lbl, bg => 4);
-	} else {
-		$win->print($lbl);
-	}
-	return unless $self->is_open;
-	return unless $self->children;
-	unless($self->{last}) {
-		foreach my $l (1..($self->lines - 1)) {
-			$win->goto($l, 0);
-			$win->print($self->prefix_text);
+	LINE:
+	for ($y..$y+$rect->lines) {
+		last LINE unless $_ < $win->lines;
+		$win->goto($_, $rect->left);
+		my $x = 0;
+		$win->print($self->next_sibling ? $self->prefix_text : (' ' x textwidth($self->prefix_text))) if $rect->left <= textwidth($self->prefix_text);
+		$x += textwidth($self->prefix_text);
+		if($self->is_open && $self->children) {
+			$win->erasech($rect->cols - $x) unless $self->next_sibling;
+		} else {
+			$win->erasech($rect->cols - $x);
 		}
 	}
-	$_->render for $self->children;
 }
 
 =head2 highlighted
@@ -358,7 +444,7 @@ sub render {
 
 sub highlighted {
 	my $self = shift;
-	return $self->root->{highlighted} || $self->root;
+	return $self->root->{highlighted} ||= $self->root;
 }
 
 =head2 label
@@ -375,20 +461,9 @@ sub highlight {
 	my $self = shift;
 	$self->highlighted->{is_highlighted} = 0;
 	$self->{is_highlighted} = 1;
-	Scalar::Util::weaken($self->root->{highlighted} = $self);
+	$self->root->{highlighted} = $self;
+	return $self;
 }
-
-=head2 prev
-
-=cut
-
-sub prev { shift->{prev} }
-
-=head2 next
-
-=cut
-
-sub next { shift->{next} }
 
 =head2 highlight_next
 
@@ -396,7 +471,14 @@ sub next { shift->{next} }
 
 sub highlight_next {
 	my $self = shift;
-	$self->highlighted->next->highlight;
+	my $next = $self->highlighted->next;
+	$next->highlight;
+	die "root variance? " . $next->root->label . ', ' . $self->root->label if $next->root != $self->root;
+	die "Highlight failed? " . join ', ', $next->label, $self->highlighted->label, $next->highlighted->label, $next->is_highlighted unless $next->label eq $self->highlighted->label;
+	die "Next does not match highlight: " . $next->tree_parent->label . ", " . $self->highlighted->tree_parent->label . ", $self" unless $next == $self->highlighted && $next eq $self->highlighted;
+	die "Next item (" . $next->label . ") is not highlighted" unless $next->is_highlighted;
+	die "Highlighted (" . $self->highlighted->label . ") is not highlighted, I am " . $self->label unless $self->highlighted->is_highlighted;
+	return $self;
 }
 
 =head2 highlight_prev
@@ -406,6 +488,8 @@ sub highlight_next {
 sub highlight_prev {
 	my $self = shift;
 	$self->highlighted->prev->highlight;
+	die "Highlighted (" . $self->highlighted->label . ") is not highlighted, I am " . $self->label unless $self->highlighted->{is_highlighted};
+	return $self;
 }
 
 =head2 rerender
@@ -415,7 +499,6 @@ sub highlight_prev {
 sub rerender {
 	my $self = shift;
 	return unless $self->window;
-	$self->window->clear if $self->root eq $self;
 	$self->redraw;
 }
 
@@ -431,14 +514,14 @@ sub root {
 		);
 		return $self;
 	}
-	return $self->{root};
+	return $_ for grep $_, $self->{root}, $self->tree_parent && $self->tree_parent->root, $self;
 }
 
-=head2 parent
+=head2 tree_parent
 
 =cut
 
-sub parent {
+sub tree_parent {
 	my $self = shift;
 	if(@_) {
 		$self->update_root_and_parent(
@@ -446,7 +529,7 @@ sub parent {
 		);
 		return $self;
 	}
-	return $self->{parent};
+	return $self->{tree_parent};
 }
 
 =head2 update_root_and_parent
@@ -460,6 +543,7 @@ sub update_root_and_parent {
 	my $parent = delete $args{parent};
 	my $root = delete $args{root};
 	die "Parent does not match root" if $parent && $root && $parent->root != $root;
+	die "Wrong root" if $old_root && $root && $root != $old_root;
 
 	$root ||= $parent->root if $parent;
 	$parent ||= $root;
@@ -470,8 +554,7 @@ sub update_root_and_parent {
 		$args{prev} = $self;
 		$args{next} = $self;
 	}
-	$self->{parent} = $parent;
-	$self->{root} = $root;
+	$self->{tree_parent} = $parent;
 	return $self;
 }
 
@@ -483,11 +566,11 @@ sub on_key {
 	my $self = shift;
 	my ($type, $str, $key) = @_;
 	if($type eq 'key' && $str eq 'Down') {
-		$self->highlight_next($self);
+		$self->highlight_next;
 		$self->rerender;
 		return 1;
 	} elsif($type eq 'key' && $str eq 'Up') {
-		$self->highlight_prev($self);
+		$self->highlight_prev;
 		$self->rerender;
 		return 1;
 	} elsif($type eq 'text' && $str eq 'A') {
@@ -498,7 +581,6 @@ sub on_key {
 			push @pending, $node->children;
 			$node->{is_open} = 1;
 		}
-		$self->rebuild_all;
 		$self->root->resized;
 		return 1;
 	} elsif($type eq 'text' && $str eq 'a') {
@@ -509,7 +591,6 @@ sub on_key {
 			push @pending, $node->children;
 			$node->{is_open} = 0;
 		}
-		$self->rebuild_all;
 		$self->root->resized;
 		return 1;
 	} elsif($type eq 'text' && $str eq '+') {
@@ -519,7 +600,6 @@ sub on_key {
 		$self->highlighted->close;
 		return 1;
 	} elsif($type eq 'text' && $str eq 'r') {
-		$self->rebuild_all;
 		$self->root->rerender;
 		return 1;
 	}
@@ -544,8 +624,8 @@ sub on_key {
 sub open {
 	my $self = shift;
 	$self->{is_open} = 1;
-	$self->resized;
-	$self->root->rebuild_all;
+	$self->tree_parent->reapply_windows if $self->tree_parent;
+	$self->next_sibling->reapply_windows if $self->next_sibling;
 	return $self;
 }
 
@@ -556,8 +636,9 @@ sub open {
 sub close {
 	my $self = shift;
 	$self->{is_open} = 0;
+	$self->next_sibling->reapply_windows if $self->next_sibling;
+	$self->tree_parent->reapply_windows if $self->tree_parent;
 	$self->resized;
-	$self->root->rebuild_all;
 	return $self;
 }
 
@@ -635,8 +716,8 @@ sub line_style {
 		$self->{line_style} = shift;
 		return $self;
 	}
-	return $self->{line_style} if exists $self->{line_style};
-	return $self->parent->line_style if $self->parent && $self->parent->isa(__PACKAGE__);
+	return $self->{line_style} if defined $self->{line_style};
+	return $self->tree_parent->line_style if $self->tree_parent;
 	return $self->root->line_style if $self->root && $self->root != $self;
 
 # Fallback default

@@ -8,7 +8,7 @@ use Module::Build 0.3601;
 my %module_build_args = (
   "build_requires" => {
     "Module::Build" => "0.3601",
-    "Test::More" => "0.88"
+    "Test::More" => "0.94"
   },
   "configure_requires" => {
     "ExtUtils::MakeMaker" => "6.30",
@@ -19,7 +19,7 @@ my %module_build_args = (
     "Tom Molesworth <cpan\@entitymodel.com>"
   ],
   "dist_name" => "Tickit-Widget-Tree",
-  "dist_version" => "0.001",
+  "dist_version" => "0.002",
   "license" => "perl",
   "module_name" => "Tickit::Widget::Tree",
   "recommends" => {},
