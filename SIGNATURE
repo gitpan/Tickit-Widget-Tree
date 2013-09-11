@@ -1,0 +1,48 @@
+This file contains message digests of all files listed in MANIFEST,
+signed via the Module::Signature module, version 0.73.
+
+To verify the content in this distribution, first make sure you have
+Module::Signature installed, then type:
+
+    % cpansign -v
+
+It will check each file's integrity, as well as the signature's
+validity.  If "==> Signature verified OK! <==" is not displayed,
+the distribution may already have been compromised, and you should
+not run its Makefile.PL or Build.PL.
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+SHA1 3048189a86d36eae29e5346253a9a9e389a98064 Changes
+SHA1 9222a7bbe031ee12e8b897609de189a2f8ffd623 INSTALL
+SHA1 58403eb3f2c8983c79c530c44104344bd938d051 LICENSE
+SHA1 c917977ef4e7ee227f51ecbaa4c463475b30fa84 MANIFEST
+SHA1 e923e8cee6d85c6d8dd965f71b204c6c97aedd8e META.json
+SHA1 c8b29c3723d0a05960668f94d7fc46040c2e98e7 META.yml
+SHA1 807d8a05d51aa97c25e8bd52547a12a222c31974 Makefile.PL
+SHA1 c9e99bbb6aab8223935b650d924d3b7dac815bfc README
+SHA1 620778964f0ad313bc19e5c6fb7e0f44874afd7b cpanfile
+SHA1 2448a1301395802db5a0094adb4f4f146d3e47a3 dist.ini
+SHA1 42f99c7053a1ebfb0c97dd6a711834c8faaed591 examples/tree.pl
+SHA1 91e49f1fb1476a1f290c072d5644bd10bbd13f53 lib/Tickit/Widget/Tree.pm
+SHA1 9084c089c7ae4217a2679432aa50941c2fc0276a lib/Tickit/Widget/Tree.pod
+SHA1 8cc917c864035bf0b875e5e5dfcbe703b13125e6 t/00-compile.t
+SHA1 198d1665317c3d91e3bb81f0a3b8dad8d4d66f20 xt/release/common_spelling.t
+SHA1 c6c3c9f7fe12058b4771449dff874b1c450c982c xt/release/mojibake.t
+SHA1 4c599e8a4ebb7a899f90ee3c235a64fdbc7e2c06 xt/release/pod-coverage.t
+SHA1 9934d36e45e1143c1a54658bc48872e0591af41b xt/release/pod-syntax.t
+SHA1 fd1fa776fca35fc8f1bdd24ee3fbaa1eca755a44 xt/release/synopsis.t
+SHA1 bbcd59d081d9940af5d43337ae85458075933829 xt/release/test-version.t
+SHA1 ec3f84bfd7a9ce3246e7592f4134100c6b5ce02b xt/release/unused-vars.t
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQEcBAEBAgAGBQJSL7mnAAoJEFKElMNpjtyDHigIAIMGlmgtcztlLlbgFuTEaPiZ
+dFNMEKAaKQ+8jMP0RKmKhP3HtZMjQrYm1cyS0unggmWaQZPeebjEBpGm4T236jnb
+I/Gc+mVLbwQymqlOvct6PFJguMqOWoX2iYhabx9XPG9ArO2/O3i0rwvyq96KmCBF
+csrc27EDdXSUgz2tZhcl3xagorssHCavl8mVncWyqlVxaz7b/hsV2VSZ9JprZrN3
++7Vul0DjfH1bIkaD89L0dXSC1JONj+dcp3toEEIskdFnieqIF1yJV0CbTgKpLUrv
+vba+bPbgnV4LltIXyf1trRf5Cqd+PRo8HMxuHWmYzk1vpDBVbCoQ8eJKR1wEdk8=
+=7JuI
+-----END PGP SIGNATURE-----

@@ -1,0 +1,63 @@
+{
+   "abstract" : "Terminal tree widget",
+   "author" : [
+      "Tom Molesworth <cpan@entitymodel.com>"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "Dist::Zilla version 4.300038, CPAN::Meta::Converter version 2.132510",
+   "license" : [
+      "perl_5"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "Tickit-Widget-Tree",
+   "prereqs" : {
+      "build" : {
+         "requires" : {
+            "perl" : "5.010001"
+         }
+      },
+      "configure" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "6.48"
+         }
+      },
+      "develop" : {
+         "requires" : {
+            "Pod::Coverage::TrustPod" : "0",
+            "Test::Pod" : "1.41",
+            "Test::Pod::Coverage" : "1.08"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "Mixin::Event::Dispatch" : "1.000",
+            "Term::TermKey" : "0",
+            "Tickit" : "0.37",
+            "Tree::DAG_Node" : "1.16",
+            "parent" : "0"
+         }
+      },
+      "test" : {
+         "requires" : {
+            "IO::Handle" : "0",
+            "IPC::Open3" : "0",
+            "Test::Fatal" : "0.010",
+            "Test::More" : "0.98",
+            "Test::Refcount" : "0.07"
+         }
+      }
+   },
+   "release_status" : "testing",
+   "resources" : {
+      "bugtracker" : {
+         "mailto" : "bug-tickit-widget-tree at rt.cpan.org",
+         "web" : "http://rt.cpan.org/Public/Dist/Display.html?Name=Tickit-Widget-Tree"
+      },
+      "homepage" : "http://search.cpan.org/dist/Tickit-Widget-Tree/"
+   },
+   "version" : "0.090_001"
+}
+
