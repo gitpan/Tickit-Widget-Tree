@@ -1,5 +1,13 @@
 Revision history for Tickit-Widget-Tree
 
+0.100     2013-09-13 22:47:38 Europe/London
+	Version bump for non-DEV release.
+
+	New features:
+	* highlight_node event invoked when the currently-selected node is changed.
+	Currently undocumented since the API may change slightly after some more
+	testing.
+
 0.090_002 2013-09-13 22:41:34 Europe/London
 	New features:
 	* Navigate to parent node via <Left>, first child via <Right> for quicker

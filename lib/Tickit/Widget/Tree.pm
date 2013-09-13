@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use parent qw(Tickit::Widget Mixin::Event::Dispatch);
 
-our $VERSION = '0.090_002';
+our $VERSION = '0.100';
 
 =head1 NAME
 
@@ -12,7 +12,7 @@ Tickit::Widget::Tree - tree widget implementation for L<Tickit>
 
 =head1 VERSION
 
-version 0.090_002
+version 0.100
 
 =head1 SYNOPSIS
 
@@ -492,7 +492,9 @@ Change the currently highlighted node.
 sub highlight_node {
 	my $self = shift;
 	if(@_) {
+		my $prev = $self->{highlight_node};
 		$self->{highlight_node} = shift;
+		$self->invoke_event(highlight_node => $self->{highlight_node}, $prev);
 		$self->redraw;
 		return $self
 	}
