@@ -14,7 +14,7 @@ Tickit::Widget::Tree - tree widget implementation for L<Tickit>
 
 =head1 VERSION
 
-version 0.090_001
+version 0.090_002
 
 =head1 SYNOPSIS
 
@@ -67,6 +67,12 @@ Key bindings are currently:
 		'<+>'                => 'open_node',
 		'<->'                => 'close_node';
 
+=head2 calculate_size
+
+Calculate the minimum size needed to contain the full tree with all nodes expanded.
+
+Used internally.
+
 =head2 new
 
 Instantiate. Takes the following named parameters:
@@ -87,9 +93,18 @@ mark the tree for redraw), returning $self.
 
 Otherwise, returns the root node - or undef if we do not have one.
 
+=head2 window_gained
+
+Work out our size, when we have a window to fit in.
+
 =head2 render_to_rb
 
 Render method. Used internally.
+
+=head2 reshape
+
+Workaround to avoid warnings from L<Tickit::Window>. This probably shouldn't
+be here, pretend you didn't see it.
 
 =head2 on_mouse
 
@@ -110,6 +125,15 @@ Go up a node.
 =head2 key_next_row
 
 Move down a node.
+
+=head2 key_up_tree
+
+Going "up" the tree means the parent of the current node.
+
+=head2 key_down_tree
+
+Going "down" the tree means the first child node, if we have one
+and we're open.
 
 =head2 highlight_node
 
@@ -149,7 +173,7 @@ Plenty of features and bugfixes left on the list, in no particular order:
 
 =item L<Tickit::Widget>
 
-L<get_style_pen|Tickit::Widget/get_style_pen>, L<get_style_text|Tickit::Widget/get_style_text>, L<get_style_values|Tickit::Widget/get_style_values>, L<key_focus_next_after|Tickit::Widget/key_focus_next_after>, L<key_focus_next_before|Tickit::Widget/key_focus_next_before>, L<on_pen_changed|Tickit::Widget/on_pen_changed>, L<parent|Tickit::Widget/parent>, L<pen|Tickit::Widget/pen>, L<redraw|Tickit::Widget/redraw>, L<reshape|Tickit::Widget/reshape>, L<resized|Tickit::Widget/resized>, L<set_parent|Tickit::Widget/set_parent>, L<set_pen|Tickit::Widget/set_pen>, L<set_style|Tickit::Widget/set_style>, L<set_style_tag|Tickit::Widget/set_style_tag>, L<set_window|Tickit::Widget/set_window>, L<style_classes|Tickit::Widget/style_classes>, L<take_focus|Tickit::Widget/take_focus>, L<window|Tickit::Widget/window>, L<window_gained|Tickit::Widget/window_gained>, L<window_lost|Tickit::Widget/window_lost>
+L<get_style_pen|Tickit::Widget/get_style_pen>, L<get_style_text|Tickit::Widget/get_style_text>, L<get_style_values|Tickit::Widget/get_style_values>, L<key_focus_next_after|Tickit::Widget/key_focus_next_after>, L<key_focus_next_before|Tickit::Widget/key_focus_next_before>, L<on_pen_changed|Tickit::Widget/on_pen_changed>, L<parent|Tickit::Widget/parent>, L<pen|Tickit::Widget/pen>, L<redraw|Tickit::Widget/redraw>, L<resized|Tickit::Widget/resized>, L<set_parent|Tickit::Widget/set_parent>, L<set_pen|Tickit::Widget/set_pen>, L<set_style|Tickit::Widget/set_style>, L<set_style_tag|Tickit::Widget/set_style_tag>, L<set_window|Tickit::Widget/set_window>, L<style_classes|Tickit::Widget/style_classes>, L<take_focus|Tickit::Widget/take_focus>, L<window|Tickit::Widget/window>, L<window_lost|Tickit::Widget/window_lost>
 
 =item L<Mixin::Event::Dispatch>
 
