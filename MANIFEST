@@ -9,6 +9,7 @@ README
 SIGNATURE
 cpanfile
 dist.ini
+examples/scroll.pl
 examples/tree.pl
 lib/Tickit/Widget/Tree.pm
 lib/Tickit/Widget/Tree.pod

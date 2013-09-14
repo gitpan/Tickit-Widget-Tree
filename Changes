@@ -1,5 +1,17 @@
 Revision history for Tickit-Widget-Tree
 
+0.101     2013-09-14 01:28:37 Europe/London
+	New features:
+	* Cursor is in a slightly less confusing location
+	* CAN_SCROLL support (for embedding in Tickit::Widget::ScrollBox)
+
+	Examples:
+	* Scrolling example added, requires Tickit::Widget::ScrollBox
+
+	Bug fixes:
+	* Sizing was incorrect in the last version - the cols value was
+	stored as lines as well :(
+
 0.100     2013-09-13 22:47:38 Europe/London
 	Version bump for non-DEV release.
 

@@ -14,7 +14,7 @@ Tickit::Widget::Tree - tree widget implementation for L<Tickit>
 
 =head1 VERSION
 
-version 0.100
+version 0.101
 
 =head1 SYNOPSIS
 
@@ -31,7 +31,7 @@ is not backward compatible.
 
 =begin HTML
 
-<p><img src="http://tickit.perlsite.co.uk/cpan-screenshot/tickit-widget-tree1.gif" alt="Tree widge in action" width="480" height="403"></p>
+<p><img src="http://tickit.perlsite.co.uk/cpan-screenshot/tickit-widget-tree1.gif" alt="Tree widget in action" width="480" height="403"></p>
 
 =end HTML
 
@@ -57,15 +57,28 @@ entire width of the widget, rather than just the text
 
 Key bindings are currently:
 
-		'<Up>'               => 'previous_row',
-		'<Down>'             => 'next_row',
-		'<PageUp>'           => 'previous_page',
-		'<PageDown>'         => 'next_page',
-		'<Home>'             => 'first_row',
-		'<End>'              => 'last_row',
-		'<Enter>'            => 'activate',
-		'<+>'                => 'open_node',
-		'<->'                => 'close_node';
+=over 4
+
+=item * previous_row - move up a line, stepping into open nodes, default C<Up>
+
+=item * next_row - move down a line, stepping into open nodes, default C<Down>
+
+=item * up_tree - move to the parent, default C<Left>
+
+=item * down_tree - move to the first child, opening the current node if
+necessary, default C<Right>
+
+=item * open_node - opens the current node, default C<+>
+
+=item * close_node - closes the current node, default C<->
+
+=item * activate - activates the current node, default C<Enter>
+
+=item * first_row - jump to the first node in the tree, default C<Home>
+
+=item * last_row - jump to the last node in the tree, default C<End>
+
+=back
 
 =head2 calculate_size
 
@@ -96,6 +109,16 @@ Otherwise, returns the root node - or undef if we do not have one.
 =head2 window_gained
 
 Work out our size, when we have a window to fit in.
+
+=head2 set_scrolling_extents
+
+Called by L<Tickit::Widget::ScrollBox> or other scroll-capable containers to
+set up the extent objects which determine the drawable viewport offset.
+
+=head2 scrolled
+
+Called by L<Tickit::Widget::ScrollBox> or other scroll-capable containers to
+indicate when scroll actions have occurred.
 
 =head2 render_to_rb
 
