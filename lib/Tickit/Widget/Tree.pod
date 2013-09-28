@@ -14,7 +14,7 @@ Tickit::Widget::Tree - tree widget implementation for L<Tickit>
 
 =head1 VERSION
 
-version 0.102
+version 0.103
 
 =head1 SYNOPSIS
 
@@ -176,7 +176,7 @@ Open this node.
 
 Close this node.
 
-=head2 on_activate
+=head2 key_activate
 
 Call the C<on_activate> coderef if we have it.
 

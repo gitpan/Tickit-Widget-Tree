@@ -1,5 +1,12 @@
 Revision history for Tickit-Widget-Tree
 
+0.103     2013-09-28 20:07:44 Europe/London
+	No new features.
+
+	Bug fixes:
+	* Enter key wasn't activating the highlighted node
+	* Updated Dist::Zilla::Plugin::Test::Compile for RT88783
+
 0.102     2013-09-15 18:48:14 Europe/London
 	New features:
 	* Provide a default Tree::DAG_Node object if not specified in the

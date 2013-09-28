@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use parent qw(Tickit::Widget Mixin::Event::Dispatch);
 
-our $VERSION = '0.102';
+our $VERSION = '0.103';
 
 =head1 NAME
 
@@ -12,7 +12,7 @@ Tickit::Widget::Tree - tree widget implementation for L<Tickit>
 
 =head1 VERSION
 
-version 0.102
+version 0.103
 
 =head1 SYNOPSIS
 
@@ -287,7 +287,7 @@ sub render_to_rb {
 	my $top = $rect->top + $y_offset;
 	my $bottom = $rect->bottom + $y_offset;
 	my $highlight_node = $self->highlight_node;
-	my $regular_label_pen = $self->get_style_pen;
+	my $regular_label_pen = $self->get_style_pen('label');
 	my $line_pen = $self->get_style_pen;
 	my $toggle_pen = $self->get_style_pen('toggle');
 	my $highlight_pen = $self->get_style_pen('highlight');
@@ -602,13 +602,13 @@ sub key_close_node {
 	$self->redraw;
 }
 
-=head2 on_activate
+=head2 key_activate
 
 Call the C<on_activate> coderef if we have it.
 
 =cut
 
-sub on_activate {
+sub key_activate {
 	my $self = shift;
 	$self->{on_activate}->($self->highlight_node) if $self->{on_activate};
 	$self->invoke_event(activate => $self->highlight_node);
