@@ -3,8 +3,9 @@ package Tickit::Widget::Tree;
 use strict;
 use warnings;
 use parent qw(Tickit::Widget Mixin::Event::Dispatch);
+use constant EVENT_DISPATCH_ON_FALLBACK => 0;
 
-our $VERSION = '0.103';
+our $VERSION = '0.105';
 
 =head1 NAME
 
@@ -12,7 +13,7 @@ Tickit::Widget::Tree - tree widget implementation for L<Tickit>
 
 =head1 VERSION
 
-version 0.103
+Version 0.105
 
 =head1 SYNOPSIS
 
@@ -177,7 +178,6 @@ sub calculate_size {
 		return $y;
 	};
 	$h = $code->($code, $self->root, 0, 0);
-	warn "result: $w, $h";
 	$self->{lines} = $h + 1;
 	$self->{cols} = $w;
 	return $self;
@@ -636,7 +636,7 @@ Plenty of features and bugfixes left on the list, in no particular order:
 
 =head1 AUTHOR
 
-Tom Molesworth <cpan@entitymodel.com>
+Tom Molesworth <cpan@perlsite.co.uk>
 
 =head1 LICENSE
 
