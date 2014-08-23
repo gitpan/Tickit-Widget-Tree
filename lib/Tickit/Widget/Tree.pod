@@ -16,7 +16,7 @@ Tickit::Widget::Tree - tree widget implementation for L<Tickit>
 
 =head1 VERSION
 
-Version 0.105
+Version 0.106
 
 =head1 SYNOPSIS
 

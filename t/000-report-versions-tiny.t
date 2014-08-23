@@ -53,11 +53,13 @@ eval { $v .= pmver('File::Spec','any version') };
 eval { $v .= pmver('IO::Handle','any version') };
 eval { $v .= pmver('IPC::Open3','any version') };
 eval { $v .= pmver('Mixin::Event::Dispatch','1.006') };
+eval { $v .= pmver('Term::TermKey','any version') };
 eval { $v .= pmver('Test::CheckDeps','0.010') };
 eval { $v .= pmver('Test::Fatal','0.010') };
 eval { $v .= pmver('Test::More','0.98') };
 eval { $v .= pmver('Test::Refcount','0.07') };
 eval { $v .= pmver('Tickit','0.46') };
+eval { $v .= pmver('Tickit::Widget','any version') };
 eval { $v .= pmver('Tree::DAG_Node','1.22') };
 eval { $v .= pmver('parent','any version') };
 
