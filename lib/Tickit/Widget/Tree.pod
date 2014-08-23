@@ -16,7 +16,7 @@ Tickit::Widget::Tree - tree widget implementation for L<Tickit>
 
 =head1 VERSION
 
-Version 0.106
+Version 0.107
 
 =head1 SYNOPSIS
 
@@ -105,7 +105,25 @@ Instantiate. Takes the following named parameters:
 =item * on_activate - coderef to call when a node has been activated (usually
 via 'enter' keypress)
 
+=item * data - if provided, this will be used as a data structure to build the initial tree.
+
 =back
+
+Example usage:
+
+ Tickit:Widget::Tree->new(
+  data => [
+ 	node1 => [
+		qw(some nodes here)
+	],
+	node2 => [
+		qw(more nodes in this one),
+		and => [
+			qw(this has a few child nodes too)
+		]
+	],
+  ];
+ );
 
 =head2 root
 
