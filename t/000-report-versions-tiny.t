@@ -48,12 +48,12 @@ sub pmver {
     return sprintf('%-45s => %-10s%-15s%s', $module, $pmver, $wanted, "\n");
 }
 
+eval { $v .= pmver('Adapter::Async','0.008') };
 eval { $v .= pmver('ExtUtils::MakeMaker','6.48') };
 eval { $v .= pmver('File::Spec','any version') };
 eval { $v .= pmver('IO::Handle','any version') };
 eval { $v .= pmver('IPC::Open3','any version') };
 eval { $v .= pmver('Mixin::Event::Dispatch','1.006') };
-eval { $v .= pmver('Term::TermKey','any version') };
 eval { $v .= pmver('Test::CheckDeps','0.010') };
 eval { $v .= pmver('Test::Fatal','0.010') };
 eval { $v .= pmver('Test::More','0.98') };

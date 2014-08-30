@@ -16,7 +16,7 @@ Tickit::Widget::Tree - tree widget implementation for L<Tickit>
 
 =head1 VERSION
 
-Version 0.107
+Version 0.108
 
 =head1 SYNOPSIS
 
@@ -149,6 +149,25 @@ indicate when scroll actions have occurred.
 =head2 render_to_rb
 
 Render method. Used internally.
+
+=head2 position_adapter
+
+Returns the "position" adapter. This is an L<Adapter::Async::OrderedList::Array>
+indicating where we are in the tree - it's a list of all the nodes leading to
+the currently-highlighted one.
+
+Note that this will return L<Tree::DAG_Node> items. You'd probably want the L<Tree::DAG_Node/name>
+method to get something printable.
+
+Example usage:
+
+ my $tree = Tickit::Widget::Tree->new(...);
+ my $where_am_i = Tickit::Widget::Breadcrumb->new(
+  item_transformations => sub {
+   shift->name
+  }
+ );
+ $where_am_i->adapter($tree->position_adapter);
 
 =head2 reshape
 

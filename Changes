@@ -1,5 +1,13 @@
 Revision history for Tickit-Widget-Tree
 
+0.108     2014-08-30 02:15:42+01:00 Europe/London
+	Features:
+	* Provides ->position_adapter for monitoring current tree position
+
+	Dependencies:
+	* Dropped Term::Termkey dependency which was previously used for
+	the "control" modifier key (now available directly from Tickit).
+
 0.107     2014-08-23 02:34:40+01:00 Europe/London
 	Features:
 	* Support data => [ ... ] option for constructing

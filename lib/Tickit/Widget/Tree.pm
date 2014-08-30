@@ -7,7 +7,7 @@ use parent qw(Tickit::Widget Mixin::Event::Dispatch);
 
 use constant EVENT_DISPATCH_ON_FALLBACK => 0;
 
-our $VERSION = '0.107';
+our $VERSION = '0.108';
 
 =head1 NAME
 
@@ -15,7 +15,7 @@ Tickit::Widget::Tree - tree widget implementation for L<Tickit>
 
 =head1 VERSION
 
-Version 0.107
+Version 0.108
 
 =head1 SYNOPSIS
 
@@ -38,12 +38,12 @@ is not backward compatible.
 
 =cut
 
-use Term::TermKey qw(KEYMOD_CTRL);
 use Tickit::RenderBuffer qw(LINE_SINGLE CAP_START CAP_END CAP_BOTH);
 use Tree::DAG_Node;
 use List::Util qw(max);
 use Tickit::Utils qw(textwidth);
 use Tickit::Style;
+use Adapter::Async::OrderedList::Array;
 
 use constant CLEAR_BEFORE_RENDER => 0;
 use constant WIDGET_PEN_FROM_STYLE => 1;
@@ -440,6 +440,35 @@ sub render_to_rb {
 	$rb->goto(0,0);
 }
 
+=head2 position_adapter
+
+Returns the "position" adapter. This is an L<Adapter::Async::OrderedList::Array>
+indicating where we are in the tree - it's a list of all the nodes leading to
+the currently-highlighted one.
+
+Note that this will return L<Tree::DAG_Node> items. You'd probably want the L<Tree::DAG_Node/name>
+method to get something printable.
+
+Example usage:
+
+ my $tree = Tickit::Widget::Tree->new(...);
+ my $where_am_i = Tickit::Widget::Breadcrumb->new(
+  item_transformations => sub {
+   shift->name
+  }
+ );
+ $where_am_i->adapter($tree->position_adapter);
+
+=cut
+
+sub position_adapter {
+	shift->{position_adapter} ||= do {
+		Adapter::Async::OrderedList::Array->new(
+			data => []
+		)
+	}
+}
+
 =head2 reshape
 
 Workaround to avoid warnings from L<Tickit::Window>. This probably shouldn't
@@ -469,7 +498,7 @@ sub on_mouse {
 		if(my $hotspot = $self->{toggle}{join ',', $ev->line, $ev->col}) {
 			# Ctrl-click recursively opens/closes all nodes from the given point
 			my $new = $hotspot->attributes->{open} ? 0 : 1;
-			if($ev->mod & KEYMOD_CTRL) {
+			if($ev->mod_is_ctrl) {
 				$hotspot->walk_down({
 					callback => sub {
 						my $node = shift;
@@ -614,10 +643,39 @@ Change the currently highlighted node.
 sub highlight_node {
 	my $self = shift;
 	if(@_) {
-		my $prev = $self->{highlight_node};
+		my $prev = delete $self->{highlight_node};
 		$self->{highlight_node} = shift;
-		$self->invoke_event(highlight_node => $self->{highlight_node}, $prev);
+		$self->invoke_event(
+			highlight_node => $self->{highlight_node}, $prev
+		);
 		$self->{move_cursor} = 1;
+
+		if($prev) {
+			# If we had a previous item, we'll be wanting to update our
+			# position adapter as well to indicate where we are in the
+			# tree. Thankfully Tree::DAG_Node makes this relatively easy:
+			# find common ancestor, splice new subtree over everything
+			# from that ancestor downwards.
+			my $ancestor = $prev->common(
+				$self->{highlight_node}
+			);
+			my $node = $self->{highlight_node};
+			my @extra = $node;
+			while($node != $ancestor) {
+				$node = $node->mother;
+				unshift @extra, $node;
+			}
+
+			# Might be undef, for reasons I can't remember offhand.
+			my $depth = $ancestor->ancestors // 0;
+			$self->position_adapter->splice(
+				0 + $depth,
+				1 + ($prev->ancestors - $depth),
+				\@extra
+			);
+		}
+
+		# Not very efficient. We should be able to expose previous and current instead?
 		$self->redraw;
 		return $self
 	}

@@ -33,8 +33,8 @@
       },
       "runtime" : {
          "requires" : {
+            "Adapter::Async" : "0.008",
             "Mixin::Event::Dispatch" : "1.006",
-            "Term::TermKey" : "0",
             "Tickit" : "0.46",
             "Tickit::Widget" : "0",
             "Tree::DAG_Node" : "1.22",
@@ -61,6 +61,6 @@
       },
       "homepage" : "http://search.cpan.org/dist/Tickit-Widget-Tree/"
    },
-   "version" : "0.107"
+   "version" : "0.108"
 }
 

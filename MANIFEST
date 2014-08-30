@@ -10,6 +10,7 @@ README
 SIGNATURE
 cpanfile
 dist.ini
+examples/dsl-desktop.pl
 examples/scroll.pl
 examples/style.pl
 examples/tree.pl
